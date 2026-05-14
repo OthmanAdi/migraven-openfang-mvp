@@ -1,0 +1,77 @@
+[skill]
+name = "migraven-ad"
+version = "0.1.0"
+description = "Active Directory + Berechtigung + security audit tools over a Neo4j graph. Replicates the migRaven monolith tool surface."
+author = "migRaven"
+license = "Proprietary"
+tags = ["active-directory", "berechtigung", "security-audit", "neo4j"]
+
+[runtime]
+type = "node"
+entry = "dist/index.js"
+
+# Tool names match the boss monolith verbatim so the German system prompt is drop-in.
+# The LLM reads name + description to decide when to call.
+
+[[tools.provided]]
+name = "execute_cypher"
+description = "Fuehrt einen read-only Cypher-Query gegen den AD-Graph aus. Vorher per EXPLAIN validiert. Liefert bis zu 500 Zeilen (config: MAX_ROWS). Read-only: CREATE/MERGE/DELETE/SET/REMOVE/DETACH/DROP sind gesperrt."
+input_schema = { type = "object", required = ["cypher"], properties = { cypher = { type = "string" }, row_cap = { type = "integer" }, timeout_secs = { type = "integer" }, params = { type = "object" } } }
+
+[[tools.provided]]
+name = "batch_queries"
+description = "Bis zu 5 read-only Cypher-Queries parallel mit gemeinsamem Timeout-Budget. Fuer Fan-Out-Audits. Jede Query hat ein Label fuer das Ergebnis-Mapping."
+input_schema = { type = "object", required = ["queries"], properties = { queries = { type = "array", maxItems = 5, items = { type = "object", required = ["name", "cypher"], properties = { name = { type = "string" }, cypher = { type = "string" }, row_cap = { type = "integer" }, params = { type = "object" } } } } } }
+
+[[tools.provided]]
+name = "search_fulltext"
+description = "Fulltext-Suche ueber AD-Indizes (group_search, user_search, computer_search). Liefert getroffene Knoten mit Score, sortiert absteigend."
+input_schema = { type = "object", required = ["index", "query"], properties = { index = { type = "string", enum = ["group_search", "user_search", "computer_search"] }, query = { type = "string" }, limit = { type = "integer", default = 50 } } }
+
+[[tools.provided]]
+name = "count_matching_objects"
+description = "Zaehlt AD-Objekte, die einem Praedikat entsprechen. Pflicht-Vorflugcheck VOR run_cypher bei unklarem Fan-Out."
+input_schema = { type = "object", required = ["cypher"], properties = { cypher = { type = "string" } } }
+
+[[tools.provided]]
+name = "enumerate_rule_matches"
+description = "Listet Gruppen, die einer gegebenen Ownership-Regel entsprechen (match_type: exact|ou|prefix|regex). Winner-resolved bei ueberlappenden Regeln."
+input_schema = { type = "object", required = ["rule_type", "match_type", "match_pattern"], properties = { rule_type = { type = "string", enum = ["group", "user", "computer", "department"] }, match_type = { type = "string", enum = ["exact", "ou", "prefix", "regex"] }, match_pattern = { type = "string" }, limit = { type = "integer", default = 200 } } }
+
+[[tools.provided]]
+name = "get_ownership_coverage"
+description = "Liefert Ownership-Abdeckung als JSON: {group, user, computer, department: {total, typed, pct}}. Pflicht-Erstaufruf in Ownership-Missionen."
+input_schema = { type = "object", properties = {} }
+
+[[tools.provided]]
+name = "save_ownership_rule"
+description = "Legt eine neue _GroupOwnershipRule (oder _User/Computer/DepartmentOwnershipRule) an. Schreibt in Neo4j. Erfordert explizite Bestaetigung."
+input_schema = { type = "object", required = ["rule_type", "match_type", "name", "match_pattern"], properties = { rule_type = { type = "string", enum = ["group", "user", "computer", "department"] }, match_type = { type = "string", enum = ["exact", "ou", "prefix", "regex"] }, name = { type = "string" }, match_pattern = { type = "string" }, description = { type = "string" }, sample_sams = { type = "array", items = { type = "string" } } } }
+
+[[tools.provided]]
+name = "assign_owner_to_rule"
+description = "Setzt Owner(s) auf eine existierende Ownership-Regel. Idempotent."
+input_schema = { type = "object", required = ["rule_id", "owner_sams"], properties = { rule_id = { type = "integer" }, owner_sams = { type = "array", items = { type = "string" } } } }
+
+[[tools.provided]]
+name = "propose_ownership_clusters"
+description = "Batch-Vorschlag: clustert ungetypte Objekte zu Ownership-Regeln. PFLICHT in ownership-assistant Mission. Schreibt _GroupOwnershipRule mit owner_sams optional."
+input_schema = { type = "object", required = ["proposals"], properties = { proposals = { type = "array", items = { type = "object", required = ["rule_type", "name", "match_type", "match_pattern"], properties = { rule_type = { type = "string" }, name = { type = "string" }, description = { type = "string" }, match_type = { type = "string" }, match_pattern = { type = "string" }, sample_sams = { type = "array", items = { type = "string" } }, suggested_owner_sams = { type = "array", items = { type = "string" } } } } } } }
+
+[[tools.provided]]
+name = "audit_security"
+description = "Kanonisches Security-Audit-Bundle: admin_sprawl, unconstrained_delegation, weak_password_policy, orphan_sids, stale_accounts, kerberoastable. Liefert Findings mit Severity und Remediation. Framework-Mehrwert gegenueber Boss-Monolith."
+input_schema = { type = "object", properties = { include = { type = "array", items = { type = "string", enum = ["admin_sprawl", "unconstrained_delegation", "weak_password_policy", "orphan_sids", "stale_accounts", "kerberoastable", "all"] }, default = ["all"] } } }
+
+[[tools.provided]]
+name = "update_todos"
+description = "Aktualisiert das sichtbare Working-Memory (Mission-Liste). Bei jeder Multi-Step-Mission Pflicht: zuerst Todos schreiben, dann ausfuehren."
+input_schema = { type = "object", required = ["todos"], properties = { todos = { type = "array", items = { type = "object", required = ["content", "status"], properties = { content = { type = "string" }, status = { type = "string", enum = ["pending", "in_progress", "completed"] }, activeForm = { type = "string" } } } } } }
+
+[requirements]
+tools = []
+capabilities = [
+  "NetConnect(127.0.0.1:7687)",
+  "NetConnect(localhost:7687)",
+  "LlmMaxTokens(200000)",
+]

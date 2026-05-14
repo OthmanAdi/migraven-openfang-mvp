@@ -1,0 +1,53 @@
+# OpenFang Agent OS — migRaven AD Auditor MVP
+#
+# Copy to ~/.openfang/config.toml (Windows: %USERPROFILE%\.openfang\config.toml)
+# or symlink via scripts/install.ps1. Reads Foundry API key from Windows
+# Credential Manager target `migRaven.MAX-AI` at install time and injects it
+# into the AZURE_FOUNDRY_KEY environment variable.
+
+api_listen = "127.0.0.1:50051"
+log_level = "info"
+mode = "active"
+language = "de"
+
+# Default model: Azure Foundry GPT-5.5 via OpenAI-compatible Responses API.
+# Provider "openai" + base_url override = direct hit to Foundry deployment.
+[default_model]
+provider = "openai"
+model = "gpt-5.5"
+api_key_env = "AZURE_FOUNDRY_KEY"
+base_url = "https://YOUR-FOUNDRY.cognitiveservices.azure.com/openai/v1"
+
+# Fallback: Claude Opus 4.5 on Foundry. Same endpoint, different deployment.
+# Foundry exposes Anthropic models through its OpenAI-compatible surface.
+[[fallback_providers]]
+provider = "openai"
+model = "claude-opus-4-5"
+api_key_env = "AZURE_FOUNDRY_KEY"
+base_url = "https://YOUR-FOUNDRY.cognitiveservices.azure.com/openai/v1"
+
+# Router knobs (only the two Foundry deployments above)
+[routing]
+simple_model = "claude-opus-4-5"
+medium_model = "claude-opus-4-5"
+complex_model = "gpt-5.5"
+simple_threshold = 100
+complex_threshold = 500
+
+# Memory: local SQLite. Decay slow so audit context survives.
+[memory]
+decay_rate = 0.02
+
+# Network: P2P off (single-node MVP). Shared secret required by OpenFang.
+[network]
+shared_secret = "CHANGE_ME_BEFORE_PROD"
+
+# Sandbox (defaults shown; OpenFang enforces these on every WASM skill)
+[sandbox]
+fuel_limit = 5000000
+timeout_secs = 60
+max_memory_bytes = 67108864
+
+# Session compaction (boss's monolith reimplements this; we use OpenFang's session_repair)
+[session]
+max_history_messages = 80

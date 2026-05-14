@@ -1,0 +1,31 @@
+name = "report-writer"
+version = "0.1.0"
+description = "Sub-agent: nimmt Audit-Findings vom ad-auditor und schreibt einen strukturierten Markdown-Report mit Severity-Sortierung, Business-Impact und Remediation-Roadmap."
+author = "migRaven"
+module = "builtin:chat"
+
+tags = ["report", "audit", "markdown"]
+max_history_messages = 12
+
+[model]
+provider = "openai"
+model = "claude-opus-4-5"
+api_key_env = "AZURE_FOUNDRY_KEY"
+base_url = "https://YOUR-FOUNDRY.cognitiveservices.azure.com/openai/v1"
+max_tokens = 8192
+temperature = 0.2
+system_prompt_file = "SYSTEM_PROMPT.md"
+
+[resources]
+max_llm_tokens_per_hour = 500000
+max_concurrent_tools = 2
+
+[capabilities]
+tools = []
+network = ["*.cognitiveservices.azure.com:443"]
+memory_read = ["self.*", "shared.findings"]
+memory_write = ["self.*", "shared.reports"]
+agent_spawn = false
+shell = []
+
+skills = []

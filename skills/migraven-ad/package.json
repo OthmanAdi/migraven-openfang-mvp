@@ -1,0 +1,27 @@
+{
+  "name": "@migraven/skill-ad",
+  "version": "0.1.0",
+  "private": true,
+  "description": "OpenFang skill: Active Directory + Berechtigung + security audit tools over Neo4j.",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "test": "node --test --import tsx/esm src/**/*.test.ts",
+    "lint": "eslint src --ext .ts"
+  },
+  "dependencies": {
+    "neo4j-driver": "^5.27.0",
+    "zod": "^3.23.8",
+    "gpt-tokenizer": "^2.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0",
+    "tsx": "^4.19.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

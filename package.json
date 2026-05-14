@@ -1,0 +1,19 @@
+{
+  "name": "migraven-openfang-mvp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Framework-first replica of the migRaven monolith on OpenFang Agent OS.",
+  "workspaces": [
+    "skills/migraven-ad",
+    "frontend"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=skills/migraven-ad && npm run build --workspace=frontend",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "build:skill": "npm run build --workspace=skills/migraven-ad",
+    "lint": "npm run lint --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

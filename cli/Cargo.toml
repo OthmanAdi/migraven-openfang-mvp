@@ -1,0 +1,18 @@
+[package]
+name = "migraven-ad-cli"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Thin Rust CLI for the migRaven AD Auditor (OpenFang) MVP."
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "stream"] }
+tokio = { version = "1.42", features = ["macros", "rt-multi-thread", "io-std", "io-util", "signal", "process"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+eventsource-stream = "0.2"
+futures-util = "0.3"
+anyhow = "1.0"
+rustyline = { version = "14.0", default-features = false }
+colored = "2.1"
