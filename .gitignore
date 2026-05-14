@@ -18,5 +18,8 @@ Thumbs.db
 .idea/
 *.swp
 
+# Local agent-session notes (handoffs, scratch). Never published.
+.claude/
+
 # Vendored data (regen via scripts/sync-model-directory.ps1)
 skills/migraven-ad/data/all.min.json
